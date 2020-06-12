@@ -47,7 +47,11 @@ class crypto
     int hex_passphrase_size;
 
     // EVP stuff
-    EVP_CIPHER_CTX ctx;
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+    EVP_CIPHER_CTX ctx_oldstyle;
+#else
+    EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+#endif
 
     public:
 
@@ -55,6 +59,10 @@ class crypto
     {
         //free_key( password ); can't free here because is reused by threads
         const EVP_CIPHER *cipher;
+
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+        EVP_CIPHER_CTX *ctx = &ctx_oldstyle;
+#endif
 
         //aes-128|aes-256|bf|des-ede3
         //log_set_maximum_verbosity(LOG_DEBUG);
@@ -106,9 +114,9 @@ class crypto
 
         direction = direc;
         // EVP stuff
-        EVP_CIPHER_CTX_init(&ctx);
+        EVP_CIPHER_CTX_init(ctx);
 
-        if (!EVP_CipherInit_ex(&ctx, cipher, NULL, password, ivec, direc)) {
+        if (!EVP_CipherInit_ex(ctx, cipher, NULL, password, ivec, direc)) {
             fprintf(stderr, "error setting encryption scheme\n");
             exit(EXIT_FAILURE);
         }
@@ -127,15 +135,18 @@ class crypto
     {
         int evp_outlen;
 
+#if OPENSSL_VERSION_NUMBER < 0x10100000L
+        EVP_CIPHER_CTX *ctx = &ctx_oldstyle;
+#endif
         if (len == 0) {
-            if (!EVP_CipherFinal_ex(&ctx, (unsigned char *)out, &evp_outlen)) {
+            if (!EVP_CipherFinal_ex(ctx, (unsigned char *)out, &evp_outlen)) {
                 fprintf(stderr, "encryption error\n");
                 exit(EXIT_FAILURE);
             }
             return evp_outlen;
         }
 
-        if(!EVP_CipherUpdate(&ctx, (unsigned char *)out, &evp_outlen, (unsigned char *)in, len))
+        if(!EVP_CipherUpdate(ctx, (unsigned char *)out, &evp_outlen, (unsigned char *)in, len))
         {
             fprintf(stderr, "encryption error\n");
             exit(EXIT_FAILURE);
