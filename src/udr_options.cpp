@@ -191,7 +191,7 @@ int get_udr_options(UDR_Options * udr_options, int argc, char * argv[], int rsyn
 
     //Finish setting up the key file path
     if (key_dir == NULL) {
-        snprintf(udr_options->key_filename, PATH_MAX, "%s", udr_options->key_base_filename);
+        strncpy(udr_options->key_filename, udr_options->key_base_filename, PATH_MAX);
     } else {
         sprintf(udr_options->key_filename, "%s/%s", key_dir, udr_options->key_base_filename);
     }
@@ -290,7 +290,6 @@ void get_host_username(UDR_Options * udr_options, int argc, char *argv[], int rs
     src_username[0] = '\0';
     src_host[0] = '\0';
 
-    int src_username_len, src_host_len, dest_username_len, dest_host_len;
 
     char * dest = argv[argc-1];
 
@@ -315,8 +314,8 @@ void get_host_username(UDR_Options * udr_options, int argc, char *argv[], int rs
                     exit(-1);
                 }
             }
-            snprintf(src_username, PATH_MAX, "%s", next_src_username);
-            snprintf(src_host, PATH_MAX, "%s", next_src_host);
+            strncpy(src_username, next_src_username, PATH_MAX);
+            strncpy(src_host, next_src_host, PATH_MAX);
             src_double_colon = next_src_double_colon;
             next_src_username[0] = '\0';
             next_src_host[0] = '\0';
@@ -349,13 +348,13 @@ void get_host_username(UDR_Options * udr_options, int argc, char *argv[], int rs
     }
 
     if(src_remote){
-        snprintf(udr_options->host, PATH_MAX, "%s", src_host);
-        snprintf(udr_options->username, PATH_MAX, "%s", src_username);
+        strncpy(udr_options->host, src_host, PATH_MAX);
+        strncpy(udr_options->username, src_username, PATH_MAX);
         udr_options->server_connect = src_double_colon;
     }
     else{
-        snprintf(udr_options->host, PATH_MAX, "%s", dest_host);
-        snprintf(udr_options->username, PATH_MAX, "%s", dest_username);
+        strncpy(udr_options->host, dest_host, PATH_MAX);
+        strncpy(udr_options->username, dest_username, PATH_MAX);
         udr_options->server_connect = dest_double_colon;
     }
 }

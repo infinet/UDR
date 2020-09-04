@@ -41,15 +41,16 @@ using namespace std;
 
 char * get_udr_cmd(UDR_Options * udr_options) {
     char udr_args[PATH_MAX];
+    memset(&udr_args, 0, PATH_MAX);
+    size_t cur_len;
     if (udr_options->encryption) {
         strcpy(udr_args, "-n ");
         strcat(udr_args, udr_options->encryption_type);
         strcat(udr_args, " ");
     }
-    else
-        udr_args[0] = '\0';
 
     char delay_args[PATH_MAX];
+    memset(&delay_args, 0, PATH_MAX);
     sprintf(delay_args, " -d %d ", udr_options->timeout);
     strcat(udr_args, delay_args);
 
@@ -58,15 +59,18 @@ char * get_udr_cmd(UDR_Options * udr_options) {
 
     if (udr_options->specify_ip){
 	char specify_ip_arg[PATH_MAX];
+        memset(&specify_ip_arg, 0, PATH_MAX);
 	sprintf(specify_ip_arg, " -i%s", udr_options->specify_ip);
 	strcat(udr_args, specify_ip_arg);
     }
 
     if (udr_options->server_connect) {
-        sprintf(udr_args, "%s %s", udr_args, "-t rsync");
+        strcat(udr_args, " -t rsync");
     }
     else {
-        sprintf(udr_args, "%s -a %d -b %d %s", udr_args, udr_options->start_port, udr_options->end_port, "-t rsync");
+        strcat(udr_args, " ");
+        cur_len = strlen(udr_args);
+        sprintf(&udr_args[cur_len], "-a %d -b %d %s", udr_options->start_port, udr_options->end_port, "-t rsync");
     }
 
     char* udr_cmd = (char *) malloc(strlen(udr_options->udr_program_dest) + strlen(udr_args) + 3);
@@ -214,11 +218,11 @@ int main(int argc, char* argv[]) {
 
             // Add ssh port
             sprintf(ssh_port_str, "%d", curr_options.ssh_port);
-            ssh_argv[ssh_idx++] = "-p";
+            ssh_argv[ssh_idx++] = strdup("-p");
             ssh_argv[ssh_idx++] = ssh_port_str;
 
             if (strlen(curr_options.username) != 0) {
-                ssh_argv[ssh_idx++] = "-l";
+                ssh_argv[ssh_idx++] = strdup("-l");
                 ssh_argv[ssh_idx++] = curr_options.username;
             }
 
@@ -263,7 +267,7 @@ int main(int argc, char* argv[]) {
 
         if (curr_options.encryption) {
             FILE *key_file = fopen(curr_options.key_filename, "w");
-            int succ = chmod(curr_options.key_filename, S_IRUSR | S_IWUSR);
+            chmod(curr_options.key_filename, S_IRUSR | S_IWUSR);
 
             if (key_file == NULL) {
                 fprintf(stderr, "UDR ERROR: could not write key file: %s\n", curr_options.key_filename);
@@ -292,11 +296,11 @@ int main(int argc, char* argv[]) {
         strcpy(rsync_argv[rsync_idx], argv[rsync_arg_idx]);
         rsync_idx++;
 
-        rsync_argv[rsync_idx++] = "--blocking-io";
+        rsync_argv[rsync_idx++] = strdup("--blocking-io");
 
         //rsync_argv[rsync_idx++] = curr_options.rsync_timeout;
 
-        rsync_argv[rsync_idx++] = "-e";
+        rsync_argv[rsync_idx++] = strdup("-e");
 
         char udr_rsync_args1[100];
 

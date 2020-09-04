@@ -484,7 +484,6 @@ int run_receiver(UDR_Options * udr_options) {
 
     //If in server mode, need to check that --sender is a option (read-only) and change the directory to be in the directory that is being served up.
 //  const char * sender_flag = "--sender";
-    bool seen_sender = false;
 //  bool after_dot = false;
 //  int file_idx = -1;
 //  bool called_glob = false;
@@ -524,7 +523,7 @@ int run_receiver(UDR_Options * udr_options) {
 
     char ** sh_cmd = (char **)malloc(sizeof(char *) * 4);
     sh_cmd[0] = udr_options->shell_program;
-    sh_cmd[1] = "-c";
+    sh_cmd[1] = strdup("-c");
     sh_cmd[2] = rsync_cmd;
     sh_cmd[3] = NULL;
 
